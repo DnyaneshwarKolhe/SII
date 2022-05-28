@@ -1,0 +1,3560 @@
+Write a C program to find whether a given file is present in current directory or not. 
+#include <stdio.h>
+#include <unistd.h>
+int main(int argc, char *argv[])
+{
+ if (access(argv[1],F_OK)==0)
+ printf("File %s exists", argv[1]);
+ else
+ printf("File %s doesn't exist.", argv[1]);
+ return 0;
+}
+Write a C program that a string as an argument and return all the files that begins with that name in 
+the current directory. For example > ./a.out foo will return all file names that begins with foo. 
+#include<stdio.h>
+#include<dirent.h>
+#include<string.h>
+int main(int argc, char* argv[])
+{
+DIR *d;
+char *position;
+struct dirent *dir;
+int i=0;
+if(argc!=2){
+printf("Provide suffiecient args");
+}
+else {
+d = opendir(".");
+if (d)
+{
+while ((dir = readdir(d)) != NULL)
+{
+position=strstr(dir->d_name,argv[1]);
+i=position-dir->d_name;
+if(i==0)
+printf("%s\n",dir->d_name);
+}
+closedir(d);
+}
+return(0);
+}
+}
+Write a C program to find file properties such as inode number, number of hard link, File 
+permissions, File size, File access and modification time and so on of a given file using stat() system 
+call. 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+int main(int argc, char *argv[]) {
+struct stat info;
+if (argc != 2) {
+printf("Enter filename\n");
+}
+if (stat(argv[1], &info) == -1) {
+printf("stat erro");
+exit(EXIT_FAILURE);
+}
+printf("I-node number: %ld\n", (long) info.st_ino);
+printf("File size: %lld bytes\n",(long long) info.st_size);
+printf("Last file access: %s", ctime(&info.st_atime));
+printf("Last file modification: %s", ctime(&info.st_mtime));
+printf("No of hard links: %d\n",info.st_nlink);
+printf("File Permissions: \t");
+printf( (info.st_mode & S_IRUSR) ? "r" : "-");
+printf( (info.st_mode & S_IWUSR) ? "w" : "-");
+printf( (info.st_mode & S_IXUSR) ? "x" : "-");
+printf( (info.st_mode & S_IRGRP) ? "r" : "-");
+printf( (info.st_mode & S_IWGRP) ? "w" : "-");
+printf( (info.st_mode & S_IXGRP) ? "x" : "-");
+printf( (info.st_mode & S_IROTH) ? "r" : "-");
+printf( (info.st_mode & S_IWOTH) ? "w" : "-");
+printf( (info.st_mode & S_IXOTH) ? "x" : "-");
+putchar('\n');
+}
+Write a C program to find file properties such as inode number, number of hard link, File 
+permissions, File size, File access and modification time and so on of a given file using fstat() system 
+call. 
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+int main(int argc, char **argv)
+{
+if(argc != 2) 
+return 1;
+int file=0;
+if((file=open(argv[1],O_RDONLY)) < -1)
+return 1;
+struct stat fileStat;
+if(fstat(file,&fileStat) < 0) 
+return 1;
+printf("Information for %s\n",argv[1]);
+printf("---------------------------\n");
+printf("File Size: \t\t%d bytes\n",fileStat.st_size);
+printf("Number of Hard Links: \t%d\n",fileStat.st_nlink);
+printf("File inode: \t\t%d\n",fileStat.st_ino);
+//printf("Last file access: %s", ctime(&fileStat.st_atime));
+ //printf("Last file modification: %s", ctime(&fileStat.st_mtime));
+printf("File Permissions: \t");
+printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+printf("\n");
+close(file);
+return 0;
+}
+Write a C program to create an unnamed pipe. The child process will write following three messages 
+to pipe and parent process display it. 
+Message1 = “Hello World” 
+Message2 = “Hello SPPU” 
+Message3 = “Linux is Funny” 
+#include<stdio.h>
+#include<unistd.h>
+int main() {
+int pipefds[2];
+int returnstatus;
+char writemessages[3][20]={"Hello World", "Hello SPPU","Linux is Funny"};
+char readmessage[20];
+returnstatus = pipe(pipefds);
+if (returnstatus == -1) {
+printf("Unable to create pipe\n");
+return 1;
+}
+int child = fork();
+if(child==0){
+printf("Child is Writing to pipe - Message 1 is %s\n", writemessages[0]);
+write(pipefds[1], writemessages[0], sizeof(writemessages[0]));
+printf("Child is Writing to pipe - Message 2 is %s\n", writemessages[1]);
+write(pipefds[1], writemessages[1], sizeof(writemessages[1]));
+printf("Child is Writing to pipe - Message 3 is %s\n", writemessages[2]);
+write(pipefds[1], writemessages[2], sizeof(writemessages[2]));
+}
+else
+{
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 1 is %s\n", 
+readmessage);
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 2 is %s\n", 
+readmessage);
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 3 is %s\n", 
+readmessage);
+}
+}
+Write a C program to map a given file in memory and display the content of mapped file in 
+reverse. 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/io.h>
+#include <sys/mman.h>
+int main(int argc, char *argv[])
+{
+ unsigned char *f, *g;
+ int size;
+ struct stat s;
+ const char * file_name = argv[1];
+ int fd = open(argv[1], O_RDONLY);
+ int status = fstat(fd, &s);
+ size = s.st_size;
+ int i;
+ f = (char *) mmap (0, size, PROT_READ, MAP_PRIVATE, fd, 0);
+ //g = (char *) mmap (0, size, PROT_READ, MAP_PRIVATE, fd, 0);
+ for(i = 0; i < size; i++) {
+ char c;
+ c = f[i];
+ putchar(c);
+ }
+ //ABOVE THIS WORKS
+ // int z = 0;
+ //while(f[z] != NULL) {
+ //z++;
+ // printf("%d", z);
+ // }
+ int x;
+ int y = 0;
+ close(fd);
+ FILE *f1;
+ f1 = fopen(argv[2], "w+");
+ for(x = size - 1; x >= 0; x--)
+ {
+ char c;
+ c = f[x];
+ fputc(c, f1);
+ } 
+ return 0;
+}
+Write a C program to create a file with hole in it.
+#include <fcntl.h>
+#include<stdio.h>
+#include<stdlib.h>
+char buf1[] = "welcome";
+char buf2[] = "Computer science";
+int main(void)
+{
+int fd;
+if ((fd = creat("file_with_hole.txt",0777 )) < 0)
+printf("creat error");
+if (write(fd, buf1, 7) != 7)
+printf("buf1 write error");
+lseek(fd,100,SEEK_CUR);
+if (write(fd, buf2, 16) != 16)
+printf("buf2 write error");
+exit(0);
+}
+Write a C program to get and set the resource limits such as files, memory associated with a 
+process.
+#include <stdio.h>
+#include <sys/resource.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+ 
+int main() {
+ 
+ struct rlimit old_lim, lim, new_lim;
+ 
+ // Get old limits
+ if( getrlimit(RLIMIT_NOFILE, &old_lim) == 0)
+ printf("Old limits -> soft limit= %ld \t"
+ " hard limit= %ld \n", old_lim.rlim_cur, 
+ old_lim.rlim_max);
+ else
+ fprintf(stderr, "%s\n", strerror(errno));
+ 
+ // Set new value
+ lim.rlim_cur = 3;
+ lim.rlim_max = 1024;
+ 
+ // Set limits
+ if(setrlimit(RLIMIT_NOFILE, &lim) == -1)
+ fprintf(stderr, "%s\n", strerror(errno));
+ 
+ // Get new limits
+ if( getrlimit(RLIMIT_NOFILE, &new_lim) == 0)
+ printf("New limits -> soft limit= %ld "
+ "\t hard limit= %ld \n", new_lim.rlim_cur, 
+ new_lim.rlim_max);
+ else
+ fprintf(stderr, "%s\n", strerror(errno));
+ return 0;
+}
+Output:
+Old limits -> soft limit= 1048576 hard limit= 1048576 
+New limits -> soft limit= 3 hard limit= 1024
+Write a C program to display as well as resets the environment variable such as path, home, root etc.
+/* C Program to Print Environment variables */
+#include <stdio.h>
+void main(int argc, char *argv[], char * envp[])
+{
+ int i;
+ for (i = 0; envp[i] != NULL; i++)
+ { 
+ printf("\n%s", envp[i]);
+ }
+/* set environment variable _EDC_ANSI_OPEN_DEFAULT to "Y" */ 
+ setenv("_EDC_ANSI_OPEN_DEFAULT","Y",1); 
+ 
+ /* set x to the current value of the _EDC_ANSI_OPEN_DEFAULT*/ 
+ x = getenv("_EDC_ANSI_OPEN_DEFAULT"); 
+ 
+ printf("program1 _EDC_ANSI_OPEN_DEFAULT = %s\n", 
+ (x != NULL) ? x : "undefined"); 
+}
+Write a C program that will only list all subdirectories in alphabetical order from current directory.
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+int
+main(void)
+{
+ struct dirent **namelist;
+ int n;
+ int i=0;
+ n = scandir(".", &namelist, 0, alphasort);
+ if (n < 0)
+ perror("scandir");
+ else {
+ while (i<n) {
+ printf("%s\n", namelist[i]->d_name);
+ free(namelist[i]);
+ i++;
+ }
+ free(namelist);
+ }
+}
+Write a C program to display statistics related to memory allocation system. (Use mallinfo() system 
+call).
+#include <malloc.h>
+#include "tlpi_hdr.h"
+static void
+display_mallinfo(void)
+{
+ struct mallinfo mi;
+ mi = mallinfo();
+ printf("Total non-mmapped bytes (arena): %d\n", mi.arena);
+ printf("# of free chunks (ordblks): %d\n", mi.ordblks);
+ printf("# of free fastbin blocks (smblks): %d\n", mi.smblks);
+ printf("# of mapped regions (hblks): %d\n", mi.hblks);
+ printf("Bytes in mapped regions (hblkhd): %d\n", mi.hblkhd);
+ printf("Max. total allocated space (usmblks): %d\n", mi.usmblks);
+ printf("Free bytes held in fastbins (fsmblks): %d\n", mi.fsmblks);
+ printf("Total allocated space (uordblks): %d\n", mi.uordblks);
+ printf("Total free space (fordblks): %d\n", mi.fordblks);
+ printf("Topmost releasable block (keepcost): %d\n", mi.keepcost);
+}
+int main(int argc, char *argv[])
+{
+#define MAX_ALLOCS 2000000
+ char *alloc[MAX_ALLOCS];
+ int numBlocks, j, freeBegin, freeEnd, freeStep;
+ size_t blockSize;
+ if (argc < 3 || strcmp(argv[1], "--help") == 0)
+ usageErr("%s num-blocks block-size [free-step [start-free "
+ "[end-free]]]\n", argv[0]);
+ numBlocks = atoi(argv[1]);
+ blockSize = atoi(argv[2]);
+ freeStep = (argc > 3) ? atoi(argv[3]) : 1;
+ freeBegin = (argc > 4) ? atoi(argv[4]) : 0;
+ freeEnd = (argc > 5) ? atoi(argv[5]) : numBlocks;
+ printf("============== Before allocating blocks ==============\n");
+ display_mallinfo();
+ for (j = 0; j < numBlocks; j++) {
+ if (numBlocks >= MAX_ALLOCS)
+ fatal("Too many allocations");
+ alloc[j] = malloc(blockSize);
+ if (alloc[j] == NULL)
+ errExit("malloc");
+ }
+ printf("\n============== After allocating blocks ==============\n");
+ display_mallinfo();
+ for (j = freeBegin; j < freeEnd; j += freeStep)
+ free(alloc[j]);
+ printf("\n============== After freeing blocks ==============\n");
+ display_mallinfo();
+ exit(EXIT_SUCCESS);
+}
+Write a C program to create variable length arrays using alloca() system call.
+// C program for variable length members in structures in
+// GCC before C99
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+// Structure of type student
+struct student {
+ int stud_id;
+ int name_len;
+ int struct_size;
+ char stud_name[0];
+ // variable length array must be
+ // last.
+};
+// Memory allocation and initialisation of structure
+struct student* createStudent(struct student* s, int id,
+ char a[])
+{
+ s = alloca(sizeof(*s) + sizeof(char) * strlen(a));
+ s->stud_id = id;
+ s->name_len = strlen(a);
+ strcpy(s->stud_name, a);
+ s->struct_size
+ = (sizeof(*s)
+ + sizeof(char) * strlen(s->stud_name));
+ return s;
+}
+// Print student details
+void printStudent(struct student* s)
+{
+ printf("Student_id : %d\n"
+ "Stud_Name : %s\n"
+ "Name_Length: %d\n"
+ "Allocated_Struct_size: %d\n\n",
+ s->stud_id, s->stud_name, s->name_len,
+ s->struct_size);
+ // Value of Allocated_Struct_size here is in bytes.
+}
+// Driver Code
+int main()
+{
+ struct student *s1, *s2;
+ s1 = createStudent(s1, 523, "Sanjayulsha");
+ s2 = createStudent(s2, 535, "Cherry");
+ printStudent(s1);
+ printStudent(s2);
+ // size in bytes
+ printf("Size of Struct student: %lu\n",
+ sizeof(struct student));
+ // size in bytes
+ printf("Size of Struct pointer: %lu", sizeof(s1));
+ return 0;
+}
+Write a C program to send SIGALRM signal by child process to parent process and parent process 
+make a provision to catch the signal and display alarm is fired.(Use Kill, fork, signal and sleep 
+system call)
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include<signal.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include <stdlib.h>
+void Dingdong()
+{
+ printf("Ding!");
+ exit(1);
+ 
+}
+int main(int argc, char *argv[])
+{ 
+ 
+ if(argc!=3)
+ {
+ printf("How much seconds you want to sleep the child process\n");
+ }
+ int PauseSecond=(argv[1]);
+ 
+ {
+ if(fork()==0)
+ {
+ printf("waiting for alarm to go off\n"); 
+ printf("%d second pause",PauseSecond);
+ sleep(PauseSecond);
+ kill(getpid(),SIGALRM);
+ }
+ else {
+ printf("Alarm application starting\n", getpid()); 
+ signal(SIGALRM,Dingdong);
+ printf("done");
+ }
+ } 
+ 
+}
+Write a C program that redirects standard output to a file output.txt. (use of dup and open system 
+call).
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+int main(void) {
+ int number1, number2, sum;
+ int input_fds = open("./input.txt", O_RDONLY);
+ if(dup2(input_fds, STDIN_FILENO) < 0) {
+ printf("Unable to duplicate file descriptor.");
+ exit(EXIT_FAILURE);
+ }
+ scanf("%d %d", &number1, &number2);
+sum = number1 + number2;
+ printf("%d + %d = %d\n", number1, number2, sum);
+ return EXIT_SUCCESS;
+}
+Write a C program to create an unnamed pipe. Write following three messages to pipe and 
+display it. 
+Message1 = “Hello World” 
+Message2 = “Hello SPPU” 
+Message3 = “Linux is Funny” .
+#include<stdio.h>
+#include<unistd.h>
+int main() {
+int pipefds[2];
+int returnstatus;
+char writemessages[3][20]={"Hello World", "Hello SPPU","Linux is Funny"};
+char readmessage[20];
+returnstatus = pipe(pipefds);
+if (returnstatus == -1) {
+printf("Unable to create pipe\n");
+return 1;
+}
+int child = fork();
+if(child==0){
+printf("Child is Writing to pipe - Message 1 is %s\n", writemessages[0]);
+write(pipefds[1], writemessages[0], sizeof(writemessages[0]));
+printf("Child is Writing to pipe - Message 2 is %s\n", writemessages[1]);
+write(pipefds[1], writemessages[1], sizeof(writemessages[1]));
+printf("Child is Writing to pipe - Message 3 is %s\n", writemessages[2]);
+write(pipefds[1], writemessages[2], sizeof(writemessages[2]));
+}
+else
+{
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 1 is %s\n", 
+readmessage);
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 2 is %s\n", 
+readmessage);
+read(pipefds[0], readmessage, sizeof(readmessage));
+printf("Parent Process is Reading from pipe – Message 3 is %s\n", 
+readmessage);
+}
+}
+Write a C program to Identify the type (Directory, character device, Block device, Regular file, FIFO 
+or pipe, symbolic link or socket) of given file using stat() system call.
+Write a C program that catches the ctrl-c (SIGINT) signal for the first time and display the 
+appropriate message and exits on pressing ctrl-c again.
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+void sigfun(int sig)
+{
+ printf("You have presses Ctrl-C , please press again to exit");
+(void) signal(SIGINT, SIG_DFL);
+}
+int main()
+{
+ (void) signal(SIGINT, sigfun);
+while(1) {
+ printf("Hello World!
+");
+ sleep(1);
+}
+return(0);
+}
+Write a C program to display the given message ‘n’ times. (make a use of setjmp and longjmp system 
+call)
+#include <stdio.h>
+#include <setjmp.h>
+jmp_buf buf;
+main() {
+int x = 1,n;
+setjmp(buf); //set the jump position using buf
+printf("Hello"); // Prints a msg
+x++;
+ printf(“Enter the number”);
+ scanf(“%d”, &n);
+if (x <= n)
+longjmp(buf, 1); // Jump to the point located by setjmp
+}
+Write a C program to display the last access and modified time of a given file.
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+int main()
+{
+char filename[] = "c:\\test.txt";
+char timeStr[ 100 ] = "";
+struct stat buf;
+time_t ltime;
+char datebuf [9];
+char timebuf [9];
+if (!stat(filename, &buf))
+{
+strftime(timeStr, 100, "%d-%m-%Y %H:%M:%S", localtime( &buf.st_mtime));
+printf("\nLast modified date and time = %s\n", timeStr);
+}
+else
+{
+printf("error getting atime\n");
+}
+_strtime(timebuf);
+_strdate(datebuf);
+printf("\nThe Current time is %s\n",timebuf);
+printf("\nThe Current Date is %s\n",datebuf);
+time( &ltime );
+printf("\nThe Current time is %s\n",ctime( &ltime ));
+printf("\Diff between current and last modified time ( in seconds ) %f\n", difftime(ltime ,buf.st_mtime ) 
+);
+return 0;
+}
+Write a C program to move the content of file1.txt to file2.txt and remove the file1.txt from directory.
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+#define buffersize 10000
+int main()
+{
+char source[25],destination[25]; //Source and destination filename
+char buffer[buffersize]; //Character buffer
+ssize_t read_in,write_out; //Number of bytes returned by single read and write operation
+printf(“Enter source file name”);
+scanf(“%s”,&source);
+printf(“%s”,source);
+int sourcefiledesc = open(source,O_RDONLY); //Source file open in read only mode
+if(sourcefiledesc < 0 )
+{
+printf(“Source file not Exist”); //Source file not found
+}
+else
+{
+printf(“Enter destination file name”);
+scanf(“%s”,&destination);
+/* Destination file open in write mode and if not found then create*/
+int destfiledesc = open(destination,O_WRONLY | O_CREAT);
+while((read_in = read(sourcefiledesc,&buffer,buffersize))>0)
+{
+write_out = write(destfiledesc,&buffer,read_in);
+}
+if (remove(sourcefiledesc) == 0)
+ printf("File Deleted successfully");
+ else
+ printf("Unable to delete the file");
+close(sourcefiledesc);
+close(destfiledesc);
+}
+return 0;
+}
+Write a C program that print the exit status of a terminated child process.
+// C code to find the exit status of child process
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+// Driver code
+int main(void)
+{
+ pid_t pid = fork();
+ 
+ if ( pid == 0 )
+ {
+ /* The pathname of the file passed to execl()
+ is not defined */
+ execl("/bin/sh", "bin/sh", "-c", "./nopath", "NULL");
+ }
+ int status;
+ 
+ waitpid(pid, &status, 0);
+ if ( WIFEXITED(status) )
+ {
+ int exit_status = WEXITSTATUS(status); 
+ printf("Exit status of the child was %d\n",
+ exit_status);
+ }
+ return 0;
+}
+Second Question(20)
+Write a C program which blocks SIGOUIT signal for 5 seconds. After 5 second process checks any 
+occurrence of quit signal during this period, if so, it unblock the signal. Now another occurrence of 
+quit signal terminates the program. (Use sigprocmask() and sigpending() )
+Write a C program to demonstrates the different behavior that can be seen with automatic, global, 
+register, static and volatile variables (Use setjmp() and longjmp() system call).
+Write a C program to create ‘n’ child processes. When all ‘n’ child processes terminates, Display total 
+cumulative time children spent in user and kernel mode.
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<unistd.h>
+#include<time.h>
+#include<sys/times.h>
+#include<stdio.h>
+#include<stdlib.h>
+int main(void)
+{
+int i, status;
+pid_t pid;
+time_t currentTime;
+struct tms cpuTime;
+if((pid = fork())==-1) //start child process
+{
+perror("\nfork error");
+exit(EXIT_FAILURE);
+}
+else if(pid==0) //child process
+{
+time(&currentTime);
+printf("\nChild process started at %s",ctime(&currentTime));
+for(i=0;i<5;i++)
+{
+printf("\nCounting= %dn",i); //count for 5 seconds
+sleep(1);
+}
+time(&currentTime);
+printf("\nChild process ended at %s",ctime(&currentTime));
+exit(EXIT_SUCCESS);
+}
+else
+{ //Parent process
+time(&currentTime); // gives normal time
+printf("\nParent process started at %s ",ctime(&currentTime));
+if(wait(&status)== -1) //wait for child process
+perror("\n wait error");
+if(WIFEXITED(status))
+printf("\nChild process ended normally");
+else
+printf("\nChild process did not end normally");
+if(times(&cpuTime)<0) //Get process time
+perror("\nTimes error");
+else
+{ // _SC_CLK_TCK: system configuration time: seconds clock tick
+printf("\nParent process user time= %fn",((double)
+cpuTime.tms_utime));
+printf("\nParent process system time = %fn",((double)
+cpuTime.tms_stime));
+printf("\nChild process user time = %fn",((double)
+cpuTime.tms_cutime));
+printf("\nChild process system time = %fn",((double)
+cpuTime.tms_cstime));
+}
+time(&currentTime);
+printf("\nParent process ended at %s",ctime(&currentTime));
+exit(EXIT_SUCCESS);
+}
+}
+Write a C program to implement the following unix/linux command (use fork, pipe and exec system 
+call). Your program should block the signal Ctrl-C and Ctrl-\ signal during the execution. 
+ls –l | wc–l
+Write a C program to read all txt files (that is files that ends with .txt) in the current directory and 
+merge them all to one txt file and returns a file descriptor for the new file
+Write a C program that behaves like a shell (command interpreter). It has its own prompt say 
+“NewShell$”. Any normal shell command is executed from your shell by starting a child process to 
+execute the system program corresponding to the command. It should additionally interpret the 
+following command. 
+i) list f<dirname> - print name of all files in directory 
+ii) list n <dirname> - print number of all entries 
+iii) list i<dirname> - print name and inode of all files
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<dirent.h> 
+char *buff,*t1,*t2,*t3,ch;
+int pid;
+void list(char t2,char *t3)
+{
+ DIR *dir;
+ struct dirent *entry;
+ int cnt=0;
+ dir=opendir(t3);
+ if (dir==NULL)
+ {
+ printf("Directory %s not found",t3);
+ return;
+ }
+ switch(t2)
+ {
+case 'f' : while((entry=readdir(dir))!=NULL)
+ {
+printf("%s\n",entry->d_name);
+ }
+ break;
+case 'n' : while((entry=readdir(dir))!=NULL)
+ 
+cnt++; 
+ printf("Total No of Entries: %d\n",cnt);
+ break;
+case 'i' : while((entry=readdir(dir))!=NULL)
+ {
+printf("\n%s\t %d",entry->d_name,entry->d_ino);
+ }
+ break;
+default : printf("Invalid argument");
+ }
+closedir(dir);
+}
+main()
+{
+ while(1)
+ {
+printf("myshell$");
+ fflush(stdin);
+t1=(char *)malloc(80);
+t2=(char *)malloc(80);
+t3=(char *)malloc(80);
+buff=(char *)malloc(80);
+fgets(buff,80,stdin);
+sscanf(buff,"%s %s %s",t1,t2,t3);
+if(strcmp(t1,"pause")==0)
+exit(0);
+else if(strcmp(t1,"list")==0)
+list(t2[0],t3);
+else
+{
+pid=fork();
+if(pid<0)
+printf("Child process is not created\n");
+else if(pid==0)
+{
+execlp("/bin",NULL);
+if(strcmp(t1,"exit")==0)
+exit(0);
+system(buff);
+}
+else
+{
+wait(NULL);
+exit(0);
+}
+}
+ }
+}
+/*
+[root@localhost ass1]# ./a.out
+myshell$list f ass2
+rr.C
+NPSJP.C
+PSJF.C
+PRIORITY.BAK
+..
+.
+PP.BAK
+PRIORITY.C
+PP.C
+myshell$list n ass2
+Total No of Entries: 9
+myshell$list i ass2
+rr.C 1452033
+NPSJP.C 1452013
+PSJF.C 1452032
+PRIORITY.BAK 1452016
+.. 1451875
+. 1452001
+PP.BAK 1452014
+PRIORITY.C 1452017
+PP.C 1452015
+myshell$ls
+#a.c# a.out ass2 a.txt b.c count.c list.c search.c s.txt typeline.c
+myshell$pause
+*/
+Write a C program which display the information of a given file similar to given by the unix /linux 
+command on current directory (l.e File Access permission, file name, file type, User id, group id, file 
+size, file access and modified time and so on) 
+ls –l <filename> 
+DO NOT simply exec ls -l <filename> or system command from the program
+Write a C program which receives file names as command line arguments and display those 
+filenames in ascending order according to their sizes. 
+(e.g $ a.out a.txt b.txt c.txt, …)
+#include<stdio.h>
+#include<dirent.h>
+#include<string.h>
+#include<sys/stat.h>
+#include<time.h>
+#include<stdlib.h>
+structfilelist
+{
+charfname[100];
+intfsize;
+};
+int main(intargc,char *argv[])
+{
+DIR *dp;
+inti,j,k;
+structdirent *ep;
+struct stat sb;
+charmon[100];
+structfilelist f1[100],temp;
+j=0;
+for(i=1;i<argc;i++)
+{
+dp=opendir("./");
+if (dp!=NULL)
+{
+while(ep=readdir(dp))
+{
+if((strcmp(ep->d_name,argv[i]))==0)
+{
+stat(ep->d_name,&sb);
+strcpy(f1[j].fname,ep->d_name);
+f1[j].fsize=sb.st_size;
+j++;
+break;
+}
+}
+}
+(void)closedir(dp);
+}
+for(i=0;i<j;i++)
+{
+for(k=0;k<=j;k++)
+{
+if(f1[i].fsize< f1[k].fsize)
+{
+temp=f1[k];
+f1[k]=f1[i];
+f1[i]=temp;
+}
+}
+}
+for(i=0;i<j;i++)
+{
+printf("%s\t%d\n",f1[i].fname,f1[i].fsize);
+}
+return 0;
+}
+/*[root@localhostsppuslipquestions]# cc slip20.c
+[root@localhostsppuslipquestions]# ./a.out slip12.c a1.c q12.c
+a1.c 465
+q12.c 596
+slip12.c 803
+*/
+Write a C program which creates two files. The first file should have read and write permission to 
+owner, group of owner and other users whereas second file has read and write permission to 
+owner(use umask() function). Now turn on group-id and turn off group execute permission of first 
+file. Set the read permission to all user for second file (use chmod() function).
+Write a C program that behaves like a shell (command interpreter). It has its own prompt say 
+“NewShell$”. Any normal shell command is executed from your shell by starting a child process to 
+execute the system program corresponding to the command. It should additionally interpret the 
+following command. 
+i) count c <filename> - print number of characters in file 
+ii) count w <filename> - print number of words in file 
+iii) count l <filename> - print number of lines in file
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h> 
+char *buff,*t1,*t2,*t3,ch;
+FILE *fp;
+int pid;
+void count(char *t2,char *t3)
+{
+ int charcount=0,wordcount=0,linecount=0;
+ if((fp=fopen(t3,"r"))==NULL)
+printf("File not found");
+ else
+ {
+while((ch=fgetc(fp))!=EOF)
+{
+if(ch==' ')
+ wordcount++;
+else if(ch=='\n')
+{
+ linecount++;
+ wordcount++;
+ 
+}
+ else
+charcount++;
+}
+ 
+ fclose(fp);
+ if(strcmp(t2,"c")==0)
+printf("The total no. of characters :%d\n",charcount);
+ else if(strcmp(t2,"w")==0)
+ printf("The total no. of words :%d\n",wordcount);
+ else if(strcmp(t2,"l")==0)
+ printf("The total no. of lines :%d\n",linecount);
+ else 
+printf("Command not found");
+}
+}
+main()
+{
+ while(1)
+ {
+printf("myshell$");
+ fflush(stdin);
+t1=(char *)malloc(80);
+t2=(char *)malloc(80);
+t3=(char *)malloc(80);
+buff=(char *)malloc(80);
+fgets(buff,80,stdin);
+sscanf(buff,"%s %s %s",t1,t2,t3);
+if(strcmp(t1,"pause")==0)
+exit(0);
+else if(strcmp(t1,"count")==0)
+count(t2,t3);
+else
+{
+pid=fork();
+if(pid<0)
+printf("Child process is not created\n");
+else if(pid==0)
+{
+execlp("/bin",NULL);
+if(strcmp(t1,"exit")==0)
+exit(0);
+system(buff);
+}
+else
+{
+wait(NULL);
+exit(0);
+}
+}
+ }
+}
+/*
+[root@localhost ass1]# ./a.out
+myshell$count c a.txt
+The total no. of characters :36
+myshell$count w a.txt
+The total no. of words :10
+myshell$count l a.txt
+The total no. of lines :4
+myshell$ls
+a.c a.out a.txt b.c count.c list.c search.c typeline.c
+myshell$pause
+*/
+Write a C program to display all the files from current directory and its subdirectory whose size is 
+greater than ’n’ Bytes Where n is accepted from user through command line.
+Write a C program that behaves like a shell (command interpreter). It has its own prompt say 
+“NewShell$”. Any normal shell command is executed from your shell by starting a child process to 
+execute the system program corresponding to the command. It should additionally interpret the 
+following command.
+i) typeline +10 <filename> - print first 10 lines of file 
+ii) typeline -20 <filename> - print last 20 lines of file 
+iii) typeline a <filename> - print all lines of file 
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h> 
+#include<string.h>
+char *buff,*t1,*t2,*t3,ch;
+FILE *fp;
+int pid;
+void typeline(char *t2,char *t3)
+{
+int i,n,count=0,num;
+if((fp=fopen(t3,"r"))==NULL)
+printf("File not found\n");
+if(strcmp(t2,"a")==0)
+{
+while((ch=fgetc(fp))!=EOF)
+printf("%c",ch);
+fclose(fp);
+return;
+} 
+n=atoi(t2);
+if(n>0)
+{
+i=0;
+while((ch=fgetc(fp))!=EOF)
+{
+if(ch=='\n')
+i++;
+if(i==n)
+break;
+printf("%c",ch);
+}
+printf("\n");
+}
+else
+{
+count=0;
+while((ch=fgetc(fp))!=EOF)
+if(ch=='\n')
+count++;
+fseek(fp,0,SEEK_SET);
+i=0;
+while((ch=fgetc(fp))!=EOF)
+{
+if(ch=='\n')
+i++;
+if(i==count+n-1)
+break;
+}
+while((ch=fgetc(fp))!=EOF)
+printf("%c",ch);
+}
+fclose(fp);
+}
+main()
+{
+while(1)
+{
+printf("myshell$");
+fflush(stdin);
+t1=(char *)malloc(80);
+t2=(char *)malloc(80);
+t3=(char *)malloc(80);
+buff=(char *)malloc(80);
+fgets(buff,80,stdin);
+sscanf(buff,"%s %s %s",t1,t2,t3);
+if(strcmp(t1,"pause")==0)
+exit(0);
+else if(strcmp(t1,"typeline")==0)
+typeline(t2,t3);
+else
+{
+pid=fork();
+if(pid<0)
+printf("Child process is not created\n");
+else if(pid==0)
+{
+execlp("/bin",NULL);
+if(strcmp(t1,"exit")==0)
+exit(0);
+system(buff);
+}
+else
+{
+wait(NULL);
+exit(0);
+}
+}
+}
+}
+/*
+[root@localhost ass1]# cc typeline.c
+[root@localhost ass1]# ./a.out
+myshell$typeline a s.txt
+hello aa welcome
+dyp bb
+tybcs aa dyp
+good morning 
+dyp gm
+myshell$typeline -2 s.txt
+good morning 
+dyp gm
+myshell$typeline +3 s.txt
+hello aa welcome
+dyp bb
+tybcs aa dyp
+myshell$ls
+#a.c# a.out ass2 a.txt b.c count.c list.c search.c s.txt typeline.c
+myshell$pause
+*/
+Write a C program that behaves like a shell (command interpreter). It has its own prompt say
+“NewShell$”.Any normal shell command is executed from your shell by starting a child process to 
+execute the system program corresponding to the command. It should additionally interpret the 
+following command. 
+i) search f <pattern><filename> - search first occurrence of pattern in filename 
+ii) search c <pattern><filename> - count no. of occurrences of pattern in filename 
+iii) search a <pattern><filename> - search all occurrences of pattern in filename
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h> 
+#include<string.h>
+char *buff,*t1,*t2,*t3,*t4,ch;
+FILE *fp;
+int pid;
+void search(char *t2,char *t3,char *t4)
+{
+int i=1,count=0;
+char *p;
+if((fp=fopen(t4,"r"))==NULL)
+printf("File not found\n");
+else
+{
+if(strcmp(t2,"f")==0)
+{
+while(fgets(buff,80,fp))
+{
+if((strstr(buff,t3))!=NULL)
+{
+printf("%d: %s\n",i,buff);
+break;
+}
+}
+i++;
+}
+else if(strcmp(t2,"c")==0)
+{
+while(fgets(buff,80,fp))
+{
+if((strstr(buff,t3))!=NULL)
+{
+count++;
+}
+}
+printf("No of occurences of %s= %d\n",t3,count);
+}
+else if(strcmp(t2,"a")==0)
+{
+while(fgets(buff,80,fp))
+{
+if((strstr(buff,t3))!=NULL)
+{
+printf("%d: %s\n",i,buff);
+}
+i++;
+}
+}
+else 
+printf("Command not found\n");
+fclose(fp);
+}
+}
+main()
+{
+while(1)
+{
+printf("myshell$");
+fflush(stdin);
+t1=(char *)malloc(80);
+t2=(char *)malloc(80);
+t3=(char *)malloc(80);
+t4=(char *)malloc(80);
+buff=(char *)malloc(80);
+fgets(buff,80,stdin);
+sscanf(buff,"%s %s %s %s",t1,t2,t3,t4);
+if(strcmp(t1,"pause")==0)
+exit(0);
+else if(strcmp(t1,"search")==0)
+search(t2,t3,t4);
+else
+{
+pid=fork();
+if(pid<0)
+printf("Child process is not created\n");
+else if(pid==0)
+{
+execlp("/bin",NULL);
+if(strcmp(t1,"exit")==0)
+exit(0);
+system(buff);
+}
+else
+{
+wait(NULL);
+exit(0);
+}
+}
+}
+}
+/*
+[root@localhost ass1]# cc search.c
+[root@localhost ass1]# ./a.out
+myshell$search f aa s.txt
+1: hello aa welcome
+myshell$search c dyp s.txt
+No of occurences of dyp= 3
+myshell$search a dyp s.txt
+2: dyp bb
+3: tybcs aa dyp
+5: dyp gm
+myshell$ls
+#a.c# a.out a.txt b.c count.c list.c search.c s.txt typeline.c
+myshell$pause
+*/
+Write a C program which creates a child process and child process catches a signal SIGHUP, SIGINT
+and SIGQUIT. The Parent process send a SIGHUP or SIGINT signal after every 3 seconds, at the end 
+of 15 second parent send SIGQUIT signal to child and child terminates by displaying message "My 
+Papa has Killed me!!!”.
+#include<stdio.h>
+#include<signal.h>
+#include<stdlib.h>
+void sighup();
+void sigint();
+void sigquit();
+main()
+{
+int pid,i,j,k;
+if ((pid = fork() ) < 0)
+{
+perror("fork");
+exit(1);
+}
+if ( pid == 0)
+{
+signal(SIGHUP,sighup);
+signal(SIGINT,sigint);
+signal(SIGQUIT,sigquit);
+for(;;);
+}
+else
+{
+j=0;
+for(i=1;i<=5;i++)
+{
+j++;
+printf("PARENT: sending SIGHUP Signal : %d\n",j);
+kill(pid,SIGHUP);
+sleep(3);
+printf("PARENT: sending signal : %d\n",j);
+kill (pid,SIGINT);
+sleep(3);
+}
+sleep(3);
+printf("Parent sending SIGQUIT\n");
+kill(pid,SIGQUIT);
+}
+}
+void sighup()
+{
+signal(SIGHUP,sighup);
+printf("Child: I have received sighup\n");
+}
+void sigint()
+{
+signal(SIGINT,sigint);
+printf("Child: I have received sighINT\n");
+}
+void sigquit()
+{
+printf("My daddy has killed me\n");
+exit(0);
+}
+Write a C program to implement the following unix/linux command on current directory 
+ls –l > output.txt 
+DO NOT simply exec ls -l > output.txt or system command from the program.
+#include<stdlib.h>
+#include<stdio.h> 
+#include<string.h> 
+main(int argc, char *argv[])
+{
+char d[50]; 
+if(argc==2)
+{
+bzero(d,sizeof(d));
+strcat(d,"ls ");
+strcat(d,"> ");
+strcat(d,argv[1]); 
+system(d);
+}
+else
+printf("\nInvalid No. of inputs");
+}
+/*output:-
+[root@localhost unix]# cc slip23.c
+[root@localhost unix]# ls
+exitdemo.c hello orphan.c signaldemo.c~ x.out
+exitprg.c hello1 orphan.c~ slip10.c zombie.c
+exitprg.c~ hello1.c p.c slip10.c~ zombie.c~
+f1.txt hello.c p.c~ slip16.c
+f1.txt~ hello.txt pipedemo.c slip16.c~
+f3 hello.txt~ pipedemo.c~ slip19.c
+[root@localhost unix]# cat >file3
+[6]+ Stopped cat > file3
+[root@localhost unix]# ./a.out file3
+[root@localhost unix]# cat file3
+exitdemo.c hello orphan.c signaldemo.c~ x.out
+exitprg.c hello1 orphan.c~ slip10.c zombie.c
+exitprg.c~ hello1.c p.c slip10.c~ zombie.c~
+f1.txt hello.c p.c~ slip16.c
+f1.txt~ hello.txt pipedemo.c slip16.c~
+f3 hello.txt~ pipedemo.c~ slip19.c
+*/
+Write a C program to display all the files from current directory which are created in a particular 
+month.
+#include<stdio.h>
+#include<dirent.h>
+#include<string.h>
+#include<sys/stat.h>
+#include<time.h>
+#include<stdlib.h>
+int main(intargc, char *argv[])
+{
+char in[100],st[100],*ch,*ch1,c,buff[512];
+DIR *dp;
+int i;
+structdirent *ep;
+struct stat sb;
+charmon[100];
+dp=opendir("./");
+if (dp != NULL)
+{
+while(ep =readdir(dp))
+{
+if(stat(ep->d_name,&sb) == -1)
+{
+perror("stat");
+exit(EXIT_SUCCESS);
+}
+strcpy(mon,ctime(&sb.st_ctime));
+ch=strtok(mon," ");
+ch=strtok(NULL,",");
+ch1=strtok(ch," ");
+if((strcmp(ch1,argv[1]))==0)
+{
+printf("%s\t\t%s",ep->d_name,ctime(&sb.st_ctime));
+}
+}
+(void)closedir(dp);
+}
+return 0;
+}
+/*
+[root@localhostUnix]# cc month.c
+[root@localhostUnix]# ./a.out Mar
+a.out Fri Mar 20 22:15:23 2020
+. Fri Mar 20 22:15:23 2020
+.. Fri Mar 20 22:14:29 2020
+*/
+Write a C program to implement the following unix/linux command (use fork, pipe and exec system 
+call). Your program should block the signal Ctrl-C and Ctrl-\ signal during the execution. 
+ls –l | wc –l
+// C code to implement ls | wc command 
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <fcntl.h> 
+#include<errno.h> 
+#include<sys/wait.h> 
+#include <unistd.h> 
+int main(){ 
+// array of 2 size a[0] is for 
+// reading and a[1] is for 
+// writing over a pipe 
+int a[2]; 
+// using pipe for inter process communication 
+pipe(a); 
+if(!fork()) 
+{ 
+// closing normal stdout 
+close(1); 
+// making stdout same as a[1] 
+dup(a[1]); 
+// closing reading part of pipe 
+// we don't need of it at this time 
+close(a[0]); 
+// executing ls 
+execlp("ls","ls",NULL); 
+} 
+else 
+{ 
+// closing normal stdin 
+close(0); 
+// making stdin same as a[0] 
+dup(a[0]); 
+// closing writing part in parent, 
+// we don't need of it at this time 
+close(a[1]); 
+// executing wc 
+execlp("wc","wc",NULL); 
+} 
+}
+Write a C program which creates a child process to run linux/ unix command or any user defined 
+program. The parent process set the signal handler for death of child signal and Alarm signal. If a 
+child process does not complete its execution in 5 second then parent process kills child process.
+Write a C program that will read a directory containing a set of files, create a new sub directory 
+called “backup” in same directory and copy all the files from directory to the new sub directory 
+“backup”. You are supposed to use exec() with “cp” command. ( Create child processes that can 
+execute each of the cp commands to copy the file from directory to subdirectory “backup”)
+
+MOBILE TECHNOLOGIES 
+PRACTICAL ASSIGNMENTS
+Submitted By : Nisha Kumari
+Class : M.C.S – I
+Seat Number : 24019
+ASSIGNMENT – 1
+• Android Program to Demonstrate Usage of String.xml 
+File
+strings.xml
+<resources>
+ <string name="app_name">Sample</string>
+ <string name="NameOfTheString">Test 
+string</string>
+</resources>
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+ 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:app="http://schemas.android.com/apk/resauto"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ tools:context=".MainActivity">
+ <TextView
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ 
+app:layout_constraintBottom_toBottomOf="parent"
+ app:layout_constraintLeft_toLeftOf="parent"
+ app:layout_constraintRight_toRightOf="parent"
+ android:text="@string/NameOfTheString"
+ app:layout_constraintTop_toTopOf="parent" />
+</android.support.constraint.ConstraintLayout>
+MainActivity.java
+package com.example.sample;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+public class MainActivity extends AppCompatActivity 
+{
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ }
+}
+AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" package="com.example.sample">
+ <application
+ android:allowBackup="true"
+ android:icon="@mipmap/ic_launcher"
+ android:label="@string/app_name"
+ android:roundIcon="@mipmap/ic_launcher_round"
+ android:supportsRtl="true"
+ android:theme="@style/AppTheme">
+ <activity android:name=".MainActivity">
+ <intent-filter>
+ <action 
+android:name="android.intent.action.MAIN" />
+ <category 
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+</application>
+</manifest>
+Output : 
+ASSIGNMENT – 2
+• Android Program to Demonstrate Activity Life Cycle
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?> 
+<android.support.constraint.ConstraintLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" 
+ xmlns:app="http://schemas.android.com/apk/resauto" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ android:layout_width="match_parent" 
+ android:layout_height="match_parent" 
+ 
+tools:context="example.javatpoint.com.activitylifecy
+cle.MainActivity"> 
+ 
+ <TextView 
+ android:layout_width="wrap_content" 
+ android:layout_height="wrap_content" 
+ android:text="Hello World!" 
+ 
+app:layout_constraintBottom_toBottomOf="parent" 
+ app:layout_constraintLeft_toLeftOf="parent" 
+ 
+app:layout_constraintRight_toRightOf="parent" 
+ app:layout_constraintTop_toTopOf="parent" /> 
+ 
+</android.support.constraint.ConstraintLayout> 
+MainActivity.java
+package example.javatpoint.com.activitylifecycle; 
+ 
+import android.app.Activity; 
+import android.os.Bundle; 
+import android.util.Log; 
+ 
+public class MainActivity extends Activity { 
+ 
+ @Override 
+ protected void onCreate(Bundle 
+savedInstanceState) { 
+ super.onCreate(savedInstanceState); 
+ setContentView(R.layout.activity_main); 
+ Log.d("lifecycle","onCreate invoked"); 
+ } 
+ @Override 
+ protected void onStart() { 
+ super.onStart(); 
+ Log.d("lifecycle","onStart invoked"); 
+ } 
+ @Override 
+ protected void onResume() { 
+ super.onResume(); 
+ Log.d("lifecycle","onResume invoked"); 
+ } 
+ @Override 
+ protected void onPause() { 
+ super.onPause(); 
+ Log.d("lifecycle","onPause invoked"); 
+ } 
+ @Override 
+ protected void onStop() { 
+ super.onStop(); 
+ Log.d("lifecycle","onStop invoked"); 
+ } 
+ @Override 
+ protected void onRestart() { 
+ super.onRestart(); 
+ Log.d("lifecycle","onRestart invoked"); 
+ } 
+ @Override 
+ protected void onDestroy() { 
+ super.onDestroy(); 
+ Log.d("lifecycle","onDestroy invoked"); 
+ } 
+} 
+Output : 
+ASSIGNMENT – 3
+• Android Program to Change the Background of your 
+Activity
+activity_main.xml
+<RelativeLayout
+ 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:id="@+id/relativeLayout"
+ tools:context=".MainActivity">
+ <TextView
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_centerInParent="true"
+ android:textStyle="bold"
+ android:textSize="24sp"
+ android:text="The color of the Activity is 
+Yellow"/>
+</RelativeLayout>
+MainActivity.java
+import android.graphics.Color;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.RelativeLayout;
+public class MainActivity extends AppCompatActivity 
+{
+ RelativeLayout relativeLayout;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ relativeLayout = 
+findViewById(R.id.relativeLayout);
+ 
+relativeLayout.setBackgroundColor(Color.YELLOW);
+ }
+}
+androidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ package="app.com.sample">
+ <application
+ android:allowBackup="true"
+ android:icon="@mipmap/ic_launcher"
+ android:label="@string/app_name"
+ android:roundIcon="@mipmap/ic_launcher_round"
+ android:supportsRtl="true"
+ android:theme="@style/AppTheme">
+ <activity android:name=".MainActivity">
+ <intent-filter>
+ <action 
+android:name="android.intent.action.MAIN" />
+ <category 
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+ </application>
+</manifest>
+Output : 
+ASSIGNMENT – 4
+• Android Program to Perform all operations using 
+Calculator
+MainActivity.java
+package com.example.calculator;
+import android.R.color;
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.Menu;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+public class MainActivity extends Activity 
+implements OnClickListener {
+ TextView disp, res;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ disp = (TextView) 
+findViewById(R.id.textView1);
+ res = (TextView) 
+findViewById(R.id.textView2);
+ Button add = (Button) 
+findViewById(R.id.add);
+ Button mul = (Button) 
+findViewById(R.id.mul);
+ Button divide = (Button) 
+findViewById(R.id.divide);
+ Button sub = (Button) 
+findViewById(R.id.sub);
+ Button log = (Button) 
+findViewById(R.id.log);
+ Button clear = (Button) 
+findViewById(R.id.clear);
+ Button calc = (Button) 
+findViewById(R.id.calculate);
+ Button change = (Button) 
+findViewById(R.id.color);
+ add.setOnClickListener(this);
+ mul.setOnClickListener(this);
+ divide.setOnClickListener(this);
+ sub.setOnClickListener(this);
+ log.setOnClickListener(this);
+ clear.setOnClickListener(this);
+ calc.setOnClickListener(this);
+ change.setOnClickListener(this);
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ float result = 0, num1, num2;
+ Toast var;
+ switch (v.getId()) {
+ case R.id.add:
+ String str =(String) disp.getText();
+ num1 = Integer.parseInt(str);
+ disp.setText("");
+ var = Toast.makeText(MainActivity.this, 
+"Enter other number",
+ Toast.LENGTH_SHORT);
+ var.show();
+ str=(String) disp.getText();
+ num2 = Integer.parseInt(str);
+ result = num1 + num2;
+ break;
+ case R.id.sub:
+ num1 = Integer.parseInt((String) 
+disp.getText());
+ disp.setText("");
+ var = Toast.makeText(MainActivity.this, 
+"Enter other number",
+ Toast.LENGTH_SHORT);
+ var.show();
+ num2 = Integer.parseInt((String) 
+disp.getText());
+ result = num1 - num2;
+ break;
+ case R.id.mul:
+ num1 = Integer.parseInt((String) 
+disp.getText());
+ disp.setText("");
+ var = Toast.makeText(MainActivity.this, 
+"Enter other number",
+ Toast.LENGTH_SHORT);
+ var.show();
+ num2 = Integer.parseInt((String) 
+disp.getText());
+ result = num1 * num2;
+ break;
+ case R.id.divide:
+ num1 = Integer.parseInt((String) 
+disp.getText());
+ disp.setText("");
+ var = Toast.makeText(MainActivity.this, 
+"Enter other number",
+ Toast.LENGTH_SHORT);var.show();
+ num2 = Integer.parseInt((String) 
+disp.getText());
+ result = num1 / num2;
+ break;
+ case R.id.log:
+ num1 = Integer.parseInt((String) 
+disp.getText());
+ result = (float) Math.log(num1);
+ break;
+ case R.id.clear:
+ disp.setText("");
+ res.setText("");
+ break;
+ case R.id.color:
+ int rand = (int)((Math.random()*10)% 3);
+ Button b1 = (Button) 
+findViewById(R.id.add);
+ Button b2 = (Button) 
+findViewById(R.id.mul);
+ Button b3 = (Button) 
+findViewById(R.id.divide);
+ Button b4 = (Button) 
+findViewById(R.id.sub);
+ Button b5 = (Button) 
+findViewById(R.id.log);
+ Button b6 = (Button) 
+findViewById(R.id.clear);
+ Button b7 = (Button) 
+findViewById(R.id.calculate);
+ Button b8 = (Button) 
+findViewById(R.id.color);
+ rand =2;
+ switch (rand) {
+ case 0: 
+b1.setTextColor(color.holo_blue_bright);
+ 
+b2.setTextColor(color.holo_blue_bright);
+ 
+b3.setTextColor(color.holo_blue_bright);
+ 
+b4.setTextColor(color.holo_blue_bright);
+ 
+b5.setTextColor(color.holo_blue_bright);
+ 
+b6.setTextColor(color.holo_blue_bright);
+ 
+b7.setTextColor(color.holo_blue_bright);
+ 
+b8.setTextColor(color.holo_blue_bright);
+ break;
+ case 1: 
+b1.setTextColor(color.holo_green_dark);
+ 
+b2.setTextColor(color.holo_green_dark);
+ 
+b3.setTextColor(color.holo_green_dark);
+ 
+b4.setTextColor(color.holo_green_dark);
+ 
+b5.setTextColor(color.holo_green_dark);
+ 
+b6.setTextColor(color.holo_green_dark);
+ 
+b7.setTextColor(color.holo_green_dark);
+ 
+b8.setTextColor(color.holo_green_dark);
+ break;
+ case 2: 
+b1.setTextColor(color.holo_red_dark);
+ 
+b2.setTextColor(color.holo_red_dark);
+ 
+b3.setTextColor(color.holo_red_dark);
+ 
+b4.setTextColor(color.holo_red_dark);
+ 
+b5.setTextColor(color.holo_red_dark);
+ 
+b6.setTextColor(color.holo_red_dark);
+ 
+b7.setTextColor(color.holo_red_dark);
+ 
+b8.setTextColor(color.holo_red_dark);
+ break;
+ default:
+ b1.setTextColor(color.black);
+ b2.setTextColor(color.black);
+ b3.setTextColor(color.black);
+ b4.setTextColor(color.black);
+ b5.setTextColor(color.black);
+ b6.setTextColor(color.black);
+ b7.setTextColor(color.black);
+ b8.setTextColor(color.black);
+ break;
+ }
+ break;
+ case R.id.calculate:
+ res.setText(Float.toString(result));
+break;
+ }
+ }
+}
+activity_main.xml
+<TableLayout 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:columnCount="2"
+ 
+android:paddingBottom="@dimen/activity_vertical_margin"
+ 
+android:paddingLeft="@dimen/activity_horizontal_margin"
+ 
+android:paddingRight="@dimen/activity_horizontal_margin"
+ android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" >
+ <EditText
+ android:id="@+id/textView1"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:text="0"
+ android:textSize="30sp" />
+ <TextView
+ android:id="@+id/textView2"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:text="TextView"
+ android:textSize="30sp" />
+ <RelativeLayout
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_marginTop="40dp"
+ android:layout_weight="0.29" >
+ <Button
+ android:id="@+id/add"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:text="+"
+ android:textSize="20dp" >
+ </Button>
+ <Button
+ android:id="@+id/sub"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:layout_alignBaseline="@+id/button1"
+ android:layout_alignBottom="@+id/button1"
+ android:layout_centerHorizontal="true"
+ android:text="-" />
+ <Button
+ android:id="@+id/mul"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:layout_alignBaseline="@+id/button2"
+ android:layout_alignBottom="@+id/button2"
+ android:layout_alignParentRight="true"
+ android:text="X" />
+ <Button
+ android:id="@+id/calculate"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignParentBottom="true"
+ android:layout_alignParentRight="true"
+ android:layout_marginBottom="64dp"
+ android:textAlignment="center"
+ android:text="Calculate" />
+ <Button
+ android:id="@+id/color"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignParentBottom="true"
+ android:layout_alignParentRight="true"
+ android:text="ChangeColor" 
+ android:textAlignment="center"/>
+ <Button
+ android:id="@+id/divide"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:layout_alignParentLeft="true"
+ android:layout_below="@+id/add"
+ android:layout_marginTop="47dp"
+ android:text="/" />
+ <Button
+ android:id="@+id/log"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:layout_alignBaseline="@+id/divide"
+ android:layout_alignBottom="@+id/divide"
+ android:layout_alignLeft="@+id/sub"
+ android:text="log" />
+ <Button
+ android:id="@+id/clear"
+ android:layout_width="80dp"
+ android:layout_height="wrap_content"
+ android:layout_alignBaseline="@+id/log"
+ android:layout_alignBottom="@+id/log"
+ android:layout_alignParentRight="true"
+ android:text="C" />
+ </RelativeLayout>
+</TableLayout>
+Output : 
+ASSIGNMENT – 5
+• Android Program to Demonstrate the use of Scroll 
+View
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?> 
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ android:layout_width="match_parent" 
+ android:layout_height="match_parent" 
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in" 
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in" 
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin" 
+ 
+android:paddingTop="@dimen/activity_vertical_margin" 
+ 
+tools:context="com.example.test.scrollviews.MainActi
+vity"> 
+ 
+ 
+ <TextView 
+ android:layout_width="wrap_content" 
+ android:layout_height="wrap_content" 
+ 
+android:textAppearance="?android:attr/textAppearance
+Medium" 
+ android:text="Vertical ScrollView example" 
+ android:id="@+id/textView" 
+ android:layout_gravity="center_horizontal" 
+ android:layout_centerHorizontal="true" 
+ android:layout_alignParentTop="true" /> 
+ 
+ 
+ <ScrollView android:layout_marginTop="30dp" 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:id="@+id/scrollView"> 
+ 
+ 
+ <LinearLayout 
+ android:layout_width="fill_parent" 
+ android:layout_height="fill_parent" 
+ android:orientation="vertical" > 
+ 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 1" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 2" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 3" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 4" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 5" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 6" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 7" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 8" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 9" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 10" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 11" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 12" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 13" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 14" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 15" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 16" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 17" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 18" /> 
+ 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 19" /> 
+ <Button 
+ android:layout_width="fill_parent" 
+ android:layout_height="wrap_content" 
+ android:text="Button 20" /> 
+ 
+ </LinearLayout> 
+ 
+ </ScrollView> 
+ 
+</RelativeLayout> 
+MainActivity.java
+package com.example.test.scrollviews; 
+ 
+import android.support.v7.app.AppCompatActivity; 
+import android.os.Bundle; 
+ 
+public class MainActivity extends AppCompatActivity 
+{ 
+ 
+ @Override 
+ protected void onCreate(Bundle 
+savedInstanceState) { 
+ super.onCreate(savedInstanceState); 
+ setContentView(R.layout.activity_main); 
+ } 
+} 
+Output : 
+ASSIGNMENT – 6
+• Android Program to Demonstrate Radio Group 
+Application
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ android:layout_width="match_parent" 
+android:layout_height="match_parent">
+ <TextView
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_marginTop="150dp"
+ android:layout_marginLeft="100dp"
+ android:textSize="18dp"
+ android:text="Select Your Course"
+ android:textStyle="bold"
+ android:id="@+id/txtView"/>
+<RadioGroup
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:orientation="vertical"
+ android:id="@+id/rdGroup"
+ android:layout_below="@+id/txtView">
+ <RadioButton
+ android:id="@+id/rdbJava"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:padding="10dp"
+ android:layout_marginLeft="100dp"
+ android:text="Java"
+ android:onClick="onRadioButtonClicked"/>
+ <RadioButton
+ android:id="@+id/rdbPython"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:padding="10dp"
+ android:layout_marginLeft="100dp"
+ android:text="Python"
+ android:onClick="onRadioButtonClicked"/>
+ <RadioButton
+ android:id="@+id/rdbAndroid"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:padding="10dp"
+ android:layout_marginLeft="100dp"
+ android:text="Android"
+ android:onClick="onRadioButtonClicked"/>
+ <RadioButton
+ android:id="@+id/rdbAngular"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:padding="10dp"
+ android:layout_marginLeft="100dp"
+ android:text="AngularJS"
+ android:onClick="onRadioButtonClicked"/>
+</RadioGroup>
+ <Button
+ android:id="@+id/getBtn"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_marginLeft="100dp"
+ android:layout_below="@+id/rdGroup"
+ android:text="Get Course" />
+</RelativeLayout>
+MainActivity.java
+package com.tutlane.radiobuttonexample;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.Toast;
+public class MainActivity extends AppCompatActivity 
+{
+ RadioButton android, java, angular, python;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ android = 
+(RadioButton)findViewById(R.id.rdbAndroid);
+ angular = 
+(RadioButton)findViewById(R.id.rdbAngular);
+ java = 
+(RadioButton)findViewById(R.id.rdbJava);
+ python = 
+(RadioButton)findViewById(R.id.rdbPython);
+ Button btn = 
+(Button)findViewById(R.id.getBtn);
+ btn.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ String result = "Selected Course: ";
+ result+= 
+(android.isChecked())?"Android":(angular.isChecked()
+)?"AngularJS":(java.isChecked())?"Java":(python.isCh
+ecked())?"Python":"";
+ 
+Toast.makeText(getApplicationContext(), result, 
+Toast.LENGTH_SHORT).show();
+ }
+ });
+ }
+ public void onRadioButtonClicked(View view) {
+ boolean checked = ((RadioButton) 
+view).isChecked();
+ String str="";
+ // Check which radio button was clicked
+ switch(view.getId()) {
+ case R.id.rdbAndroid:
+ if(checked)
+ str = "Android Selected";
+ break;
+ case R.id.rdbAngular:
+ if(checked)
+ str = "AngularJS Selected";
+ break;
+ case R.id.rdbJava:
+ if(checked)
+ str = "Java Selected";
+ break;
+ case R.id.rdbPython:
+ if(checked)
+ str = "Python Selected";
+ break;
+ }
+ Toast.makeText(getApplicationContext(), str, 
+Toast.LENGTH_SHORT).show();
+ }
+}
+Output : 
+ASSIGNMENT – 7
+• Android Program to Demonstrate Alert Dialog Box
+MainActivity.java
+package com.example.alertdialog;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
+public class MainActivity extends Activity {
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ Button but = (Button) 
+findViewById(R.id.button);
+ but.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ // Create an alert dialog box
+ AlertDialog.Builder builder = new 
+AlertDialog.Builder(
+ MainActivity.this);
+ // Set alert title
+ 
+builder.setTitle(R.string.alerttitle);
+ // Set the value for the positive 
+reaction from the user
+ // You can also set a listener to 
+call when it is pressed
+ 
+builder.setPositiveButton(R.string.ok, null);
+ // The message
+ 
+builder.setMessage(R.string.message);
+ // Create the alert dialog and 
+display it
+ AlertDialog theAlertDialog = 
+builder.create();
+ theAlertDialog.show();
+ }
+ });
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+}
+ActivityMain.xml
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in"
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in"
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ 
+android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" >
+ <Button
+ android:id="@+id/button"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_alignParentLeft="true"
+ android:layout_alignParentRight="true"
+ android:layout_centerVertical="true"
+ android:text="SHOW DIALOG" />
+</RelativeLayout>
+Output :
+ASSIGNMENT – 8
+• Android Program to Change the Image displayed on the 
+screen
+MainActivity.java
+package com.example.changeiamge;
+import android.app.Activity;
+import android.graphics.Typeface;
+import android.os.Bundle;
+import android.renderscript.Type;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RadioGroup;
+import 
+android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.TextView;
+public class MainActivity extends Activity 
+implements OnCheckedChangeListener {
+ RadioGroup group1, group2;
+ Button gen;
+ ImageView img;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ // TODO Auto-generated method stub
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ group1 = (RadioGroup) 
+findViewById(R.id.rg1);
+ 
+group1.setOnCheckedChangeListener((OnCheckedChangeLi
+stener) this);
+ group2 = (RadioGroup) 
+findViewById(R.id.rg2);
+ 
+group2.setOnCheckedChangeListener((OnCheckedChangeLi
+stener) this);
+ img = (ImageView) 
+findViewById(R.id.imageView1);
+ // oncheckedChanged function
+ gen = (Button) findViewById(R.id.button1);
+ gen.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ }
+ });
+ }
+ @Override
+ public void onCheckedChanged(RadioGroup group, 
+int checkedId) {
+ // TODO Auto-generated method stub
+ switch (checkedId) {
+ case R.id.radioButton1:
+ img.setImageResource(R.drawable.image4);
+ break;
+ case R.id.radioButton2:
+ img.setImageResource(R.drawable.image5);
+ break;
+ case R.id.radioButton3:
+ img.setImageResource(R.drawable.image6);
+ break;
+ case R.id.radioButton4:
+ img.setImageResource(R.drawable.image7);
+ break;
+ default:
+ break;
+ }
+ }
+}
+ActivityMain.xml
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in"
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in"
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ 
+android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" >
+ <LinearLayout
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:orientation="horizontal"
+ android:paddingBottom="40px"
+ android:weightSum="2" >
+ <RadioGroup
+ android:id="@+id/rg1"
+ android:layout_width="wrap_content"
+ android:layout_height="match_parent"
+ android:layout_weight="1"
+ android:orientation="vertical" >
+ <RadioButton
+ android:id="@+id/radioButton1"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ 
+android:layout_alignParentRight="true"
+ android:layout_alignParentTop="true"
+ android:layout_marginTop="20dp"
+ android:text="Image2" />
+ <RadioButton
+ android:id="@+id/radioButton2"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ 
+android:layout_alignBaseline="@+id/radioButton1"
+ 
+android:layout_alignBottom="@+id/radioButton1"
+ 
+android:layout_alignParentLeft="true"
+ android:text="Image1" />
+ </RadioGroup>
+ <RadioGroup
+ android:id="@+id/rg2"
+ android:layout_width="wrap_content"
+ android:layout_height="match_parent"
+ android:layout_weight="1"
+ android:orientation="vertical" >
+ <RadioButton
+ android:id="@+id/radioButton3"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_marginTop="30dp"
+ android:text="Image3" />
+ <RadioButton
+ android:id="@+id/radioButton4"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ 
+android:layout_alignBaseline="@+id/radioButton3"
+ 
+android:layout_alignBottom="@+id/radioButton3"
+ 
+android:layout_alignParentRight="true"
+ android:text="Image4" />
+ </RadioGroup>
+ </LinearLayout>
+ <Button
+ android:id="@+id/button1"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_alignParentLeft="true"
+ android:layout_alignParentRight="true"
+ android:layout_centerVertical="true"
+ android:text="Change Image" />
+ <ImageView
+ android:id="@+id/imageView1"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:layout_alignLeft="@+id/button1"
+ android:layout_alignParentBottom="true"
+ android:layout_alignParentRight="true"
+ android:layout_below="@+id/button1"
+ android:layout_marginTop="50dp"
+ android:src="@drawable/ic_launcher" />
+</RelativeLayout>
+ Output : 
+ASSIGNMENT – 9
+• Android Program to Create Multiple Activities within 
+an Application
+Activity One
+package com.example.creatingmultipleactivities;
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Intent;
+import android.view.Menu;
+public class MainActivity extends Activity {
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ Thread th = new Thread() {
+ public void run() {
+ try {
+ sleep(2000);
+ startActivity(new Intent(
+ 
+"com.example.creatingmultipleactivities.second_activ
+ity"));
+ } catch (InterruptedException e) {
+ // TODO Auto-generated catch 
+block
+ e.printStackTrace();
+ }
+ finally {
+ finish();
+ }
+ }
+ };
+ th.start();
+ }
+ @Override
+ protected void onPause() {
+ // TODO Auto-generated method stub
+ super.onPause();
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+}
+Second Activity
+package com.example.creatingmultipleactivities;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+public class second_activity extends Activity{
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ // TODO Auto-generated method stub
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.second);
+ }
+ @Override
+ protected void onPause() {
+ // TODO Auto-generated method stub
+ super.onPause();
+ }
+}
+First Activity XML
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent" 
+android:paddingBottom="@dimen/activity_vertical_marg
+in" 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in" 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" 
+ android:background="@drawable/background">
+ <TextView
+ android:id="@+id/textView1"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:layout_alignParentLeft="true"
+ android:layout_alignParentTop="true"
+ android:layout_marginTop="39dp"
+ android:gravity="center_horizontal"
+ android:text="This is the first Activity"
+android:textAppearance="?android:attr/textAppearance
+Large"
+ android:textSize="50sp" />
+</RelativeLayout>
+Second Activity XML
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:orientation="vertical" 
+ android:background="@drawable/background">
+ <TextView
+ android:id="@+id/textView1"
+ android:layout_width="match_parent"
+ android:layout_height="252dp"
+ android:text="This is Second Activity"
+ android:paddingTop="80dp"
+ android:gravity="center"
+ 
+android:textAppearance="?android:attr/textAppearance
+Large"
+ android:textSize="40sp" />
+</LinearLayout>
+AndroidManifest .xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ package="com.example.creatingmultipleactivities"
+ android:versionCode="1"
+ android:versionName="1.0" >
+ <uses-sdk
+ android:minSdkVersion="8"
+ android:targetSdkVersion="17" />
+ <application
+ android:allowBackup="true"
+ android:icon="@drawable/ic_launcher"
+ android:label="@string/app_name"
+ android:theme="@style/AppTheme" >
+ <activity
+ 
+android:name="com.example.creatingmultipleactivities
+.MainActivity"
+ android:label="@string/app_name" >
+ <intent-filter>
+ <action 
+android:name="android.intent.action.MAIN" />
+ <category 
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+ <activity
+ 
+android:name="com.example.creatingmultipleactivities
+.second_activity"
+ android:label="@string/app_name" >
+ <intent-filter>
+ <action 
+android:name="com.example.creatingmultipleactivities
+.second_activity" />
+ <category 
+android:name="android.intent.category.DEFAULT" />
+ </intent-filter>
+ </activity>
+ </application>
+</manifest>
+Output :
+ASSIGNMENT – 10
+• Android Program to Demonstrate Action Button by 
+Implementing on Click Listener
+MainActivity.java
+package com.example.creating_action_button;
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Intent;
+import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
+public class MainActivity extends Activity {
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ Button next = (Button) 
+findViewById(R.id.next);
+ next.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ startActivity(new 
+Intent("com.example.creating_action_button.second"))
+;
+ // finish();
+ }
+ });
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+}
+Second_Activity.java
+package com.example.creating_action_button;
+import android.app.Activity;
+import android.os.Bundle;
+public class second_activity extends Activity {
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ // TODO Auto-generated method stub
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.second_activity);
+ }
+}
+ActivityMain.xml
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in"
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in"
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ 
+android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" >
+ <TextView
+ android:id="@+id/textView1"
+ android:layout_width="match_parent"
+ android:layout_height="258dp"
+ android:layout_alignParentLeft="true"
+ android:layout_alignParentTop="true"
+ android:layout_marginLeft="25dp"
+ android:layout_marginTop="78dp"
+ android:text="This is first Activity"
+ android:background="@drawable/ic_launcher"
+ 
+android:textAppearance="?android:attr/textAppearance
+Large" />
+ <Button
+ android:id="@+id/next"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignLeft="@+id/textView1"
+ android:layout_alignParentBottom="true"
+ android:layout_marginBottom="20dp"
+ android:text="Next" />
+</RelativeLayout>
+Second_Activity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:background="@drawable/background1"
+ android:orientation="vertical" >
+ <TextView
+ android:id="@+id/textView1"
+ android:layout_width="match_parent"
+ android:layout_height="250dp"
+ android:gravity="center"
+ android:text="Welcome to the second 
+Activity"
+ 
+android:textAppearance="?android:attr/textAppearance
+Large" />
+</LinearLayout>
+AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ package="com.example.creating_action_button"
+ android:versionCode="1"
+ android:versionName="1.0" >
+ <uses-sdk
+ android:minSdkVersion="8"
+ android:targetSdkVersion="17" />
+ <application
+ android:allowBackup="true"
+ android:icon="@drawable/ic_launcher"
+ android:label="@string/app_name"
+ android:theme="@style/AppTheme" >
+ <activity
+ 
+android:name="com.example.creating_action_button.Mai
+nActivity"
+ android:label="@string/app_name" >
+ <intent-filter>
+ <action 
+android:name="android.intent.action.MAIN" />
+ <category 
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+ <activity
+ 
+android:name="com.example.creating_action_button.sec
+ond_activity"
+ android:label="@string/app_name" >
+ <intent-filter>
+ <action 
+android:name="com.example.creating_action_button.sec
+ond" />
+ <category 
+android:name="android.intent.category.DEFAULT" />
+ </intent-filter>
+ </activity>
+ </application>
+</manifest>
+Output : 
+ASSIGNMENT – 11
+• Android Program to Demonstrate Sound Button 
+Application
+MainActivity.java
+package com.example.creating_sound_button;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
+public class MainActivity extends Activity {
+ MediaPlayer button_sound;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ Button b1 = (Button) 
+findViewById(R.id.button1);
+ Button b2 = (Button) 
+findViewById(R.id.button2);
+ Button b3 = (Button) 
+findViewById(R.id.button3);
+ Button b4 = (Button) 
+findViewById(R.id.button4);
+ b1.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ button_sound = 
+MediaPlayer.create(MainActivity.this,
+ R.raw.but_click);
+ button_sound.start();
+ }
+ });
+ b2.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ button_sound = 
+MediaPlayer.create(MainActivity.this,
+ R.raw.sound1);
+ button_sound.start();
+ }
+ });
+ b3.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ button_sound = 
+MediaPlayer.create(MainActivity.this,
+ R.raw.sound2);
+ button_sound.start();
+ }
+ });
+ b4.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ button_sound = 
+MediaPlayer.create(MainActivity.this,
+ R.raw.sound3);
+ button_sound.start();
+ }
+ });
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+ @Override
+ protected void onPause() {
+ // TODO Auto-generated method stub
+ super.onPause();
+ }
+}
+ActivityMain.xml
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in"
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in"
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ 
+android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" 
+ android:background="@drawable/background">
+ <Button
+ android:id="@+id/button1"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignParentLeft="true"
+ android:layout_alignParentTop="true"
+ android:layout_marginTop="58dp"
+ android:text="Sound1" />
+ <Button
+ android:id="@+id/button2"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignLeft="@+id/button1"
+ android:layout_below="@+id/button1"
+ android:layout_marginTop="59dp"
+ android:text="Sound2" />
+ <Button
+ android:id="@+id/button4"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignLeft="@+id/button3"
+ android:layout_below="@+id/button3"
+ android:layout_marginTop="36dp"
+ android:text="Sound4" />
+ <Button
+ android:id="@+id/button3"
+ android:layout_width="match_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignLeft="@+id/button2"
+ android:layout_below="@+id/button2"
+ android:layout_marginTop="40dp"
+ android:text="Sound3" />
+</RelativeLayout>
+Output : 
+ASSIGNMENT – 12
+• Android Program to Set the Wallpaper of Your Device 
+using Bitmap Class
+MainActivity.java
+package com.example.backgroundapp;
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Intent;
+import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
+public class MainActivity extends Activity {
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ Button button =(Button) 
+findViewById(R.id.button1);
+ button.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ startActivity(new 
+Intent("com.example.backgroundapp.bakapp"));
+ }
+ });
+ }
+ @Override
+ public boolean onCreateOptionsMenu(Menu menu) {
+ // Inflate the menu; this adds items to the 
+action bar if it is present.
+ getMenuInflater().inflate(R.menu.main, 
+menu);
+ return true;
+ }
+}
+BackappActivity.java
+package com.example.backgroundapp;
+import java.io.IOException;
+import java.io.InputStream;
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
+public class bakapp extends Activity implements 
+OnClickListener {
+ ImageView display;
+ int tophone;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ // TODO Auto-generated method stub
+ super.onCreate(savedInstanceState);
+ // to our activity to cover the whole screen
+ 
+requestWindowFeature(Window.FEATURE_NO_TITLE);
+ 
+getWindow().setFlags(WindowManager.LayoutParams.FLAG
+_FULLSCREEN,
+ 
+WindowManager.LayoutParams.FLAG_FULLSCREEN);
+ setContentView(R.layout.back);
+ Button but = (Button) 
+findViewById(R.id.setwallpaper);
+ tophone = R.drawable.image4;
+ but.setOnClickListener(this);
+ display = (ImageView) 
+findViewById(R.id.ivdisplay);
+ ImageView image1 = (ImageView) 
+findViewById(R.id.IVimage1);
+ ImageView image2 = (ImageView) 
+findViewById(R.id.IVimage2);
+ ImageView image3 = (ImageView) 
+findViewById(R.id.IVimage3);
+ ImageView image4 = (ImageView) 
+findViewById(R.id.image4);
+ ImageView image5 = (ImageView) 
+findViewById(R.id.IVimage5);
+ image1.setOnClickListener(this);
+ image2.setOnClickListener(this);
+ image3.setOnClickListener(this);
+ image4.setOnClickListener(this);
+ image5.setOnClickListener(this);
+ }
+ @Override
+ public void onClick(View v) {
+ // TODO Auto-generated method stub
+ Toast var;
+ switch (v.getId()) {
+ case R.id.IVimage1:
+ 
+display.setImageResource(R.drawable.image4);
+ var = Toast.makeText(bakapp.this, "image 
+changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ tophone = R.drawable.image4;
+ break;
+ case R.id.IVimage2:
+ 
+display.setImageResource(R.drawable.image5);
+ var = Toast.makeText(bakapp.this, "image 
+changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ tophone = R.drawable.image5;
+ break;
+ case R.id.IVimage3:
+ 
+display.setImageResource(R.drawable.image6);
+ var = Toast.makeText(bakapp.this, "image 
+changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ tophone = R.drawable.image6;
+ break;
+ case R.id.image4:
+ 
+display.setImageResource(R.drawable.image7);
+ var = Toast.makeText(bakapp.this, "image 
+changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ tophone = R.drawable.image7;
+ break;
+ case R.id.IVimage5:
+ 
+display.setImageResource(R.drawable.image8);
+ var = Toast.makeText(bakapp.this, "image 
+changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ tophone = R.drawable.image8;
+ break;
+ case R.id.setwallpaper:
+ // to set a background we need to use 
+bitmap
+ InputStream is = 
+getResources().openRawResource(tophone);
+ // to phone is a variable that is 
+updated everytime we click on an
+ // ImageView to that imageview resource 
+and by clicking the button
+ // we set the phone background to that 
+image.
+ Bitmap bm = 
+BitmapFactory.decodeStream(is);
+ // decode inputstream is
+ try {
+ 
+getApplicationContext().setWallpaper(bm);
+ // to set the wallpaper of the phone 
+background we need to ask
+ // permission from the user so add 
+permission of background from
+ // manifest file
+ } catch (IOException e) {
+ // TODO Auto-generated catch block
+ e.printStackTrace();
+ }
+ var = Toast.makeText(bakapp.this, 
+"Wallpaper image changed",
+ Toast.LENGTH_SHORT);
+ var.show();
+ break;
+ }
+ }
+}
+ActivityMain.xml
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_margin"
+ 
+android:paddingLeft="@dimen/activity_horizontal_margin"
+ 
+android:paddingRight="@dimen/activity_horizontal_margin"
+ android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context=".MainActivity" >
+ <TextView
+ android:id="@+id/textView1"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:text="Application to Change background 
+picture of device"
+ android:textSize="30dp" />
+ <Button
+ android:id="@+id/button1"
+ android:layout_width="fill_parent"
+ android:layout_height="wrap_content"
+ android:layout_alignParentBottom="true"
+ android:layout_marginBottom="96dp"
+ android:text="Click to launch" />
+</RelativeLayout>
+BackappActivity.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ android:orientation="vertical" >
+ <ImageView
+ android:id="@+id/ivdisplay"
+ android:layout_width="200dp"
+ android:layout_height="200dp"
+ android:layout_gravity="center"
+ android:src="@drawable/image4" />
+"
+ <Button
+ android:id="@+id/setwallpaper"
+ android:layout_width="fill_parent"
+ android:layout_height="wrap_content"
+ android:text="set image background" >
+ </Button>
+ <HorizontalScrollView
+ android:layout_width="200dp"
+ android:layout_height="wrap_content"
+ android:layout_gravity="center" >
+ <LinearLayout
+ android:layout_width="fill_parent"
+ android:layout_height="wrap_content" 
+ android:orientation="horizontal">
+ <ImageView
+ android:id="@+id/IVimage1"
+ android:layout_width="125dp"
+ android:layout_height="125dp"
+ android:padding="15dp"
+ android:src="@drawable/image4" />
+ <ImageView
+ android:id="@+id/IVimage2"
+ android:layout_width="125dp"
+ android:layout_height="125dp"
+ android:padding="15dp"
+ android:src="@drawable/image5" />
+ <ImageView
+ android:id="@+id/IVimage3"
+ android:layout_width="125dp"
+ android:layout_height="125dp"
+ android:padding="15dp"
+ android:src="@drawable/image6" />
+ <ImageView
+ android:id="@+id/image4"
+ android:layout_width="125dp"
+ android:layout_height="125dp"
+ android:padding="15dp"
+ android:src="@drawable/image7" />
+ <ImageView
+ android:id="@+id/IVimage5"
+ android:layout_width="125dp"
+ android:layout_height="125dp"
+ android:padding="15dp"
+ android:src="@drawable/image8" />
+ </LinearLayout>
+ </HorizontalScrollView>
+</LinearLayout>
+AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d"
+ package="com.example.backgroundapp"
+ android:versionCode="1"
+ android:versionName="1.0" >
+ <uses-sdk
+ android:minSdkVersion="8"
+ android:targetSdkVersion="17" />
+ <uses-permission 
+android:name="android.permission.SET_WALLPAPER"/>
+ <application
+ android:allowBackup="true"
+ android:icon="@drawable/ic_launcher"
+ android:label="@string/app_name"
+ android:theme="@style/AppTheme" >
+ <activity
+ 
+android:name="com.example.backgroundapp.MainActivity"
+ android:label="@string/app_name" >
+ <intent-filter>
+ <action 
+android:name="android.intent.action.MAIN" />
+ <category 
+android:name="android.intent.category.LAUNCHER" />
+ </intent-filter>
+ </activity>
+ <activity
+ 
+android:name="com.example.backgroundapp.bakapp"
+ android:label="@string/app_name" 
+ android:screenOrientation="portrait">
+ <intent-filter>
+ <action 
+android:name="com.example.backgroundapp.bakapp" />
+ <category 
+android:name="android.intent.category.DEFAULT" />
+ </intent-filter>
+ </activity>
+ </application>
+</manifest>
+Output : 
+ASSIGNMENT – 13
+• Android Program to Demonstrate the Menu Application
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?> 
+<android.support.design.widget.CoordinatorLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" 
+ xmlns:app="http://schemas.android.com/apk/resauto" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ android:layout_width="match_parent" 
+ android:layout_height="match_parent" 
+tools:context="example.javatpoint.com.optionmenu.Mai
+nActivity"> 
+ <android.support.design.widget.AppBarLayout 
+ android:layout_width="match_parent" 
+ android:layout_height="wrap_content" 
+ 
+android:theme="@style/AppTheme.AppBarOverlay"> 
+ 
+ <android.support.v7.widget.Toolbar 
+ android:id="@+id/toolbar" 
+ android:layout_width="match_parent" 
+ 
+android:layout_height="?attr/actionBarSize" 
+ android:background="?attr/colorPrimary" 
+ 
+app:popupTheme="@style/AppTheme.PopupOverlay" /> 
+ 
+ </android.support.design.widget.AppBarLayout> 
+ 
+ <include layout="@layout/content_main" /> 
+ 
+</android.support.design.widget.CoordinatorLayout> 
+context_main.xml
+<?xml version="1.0" encoding="utf-8"?> 
+<android.support.constraint.ConstraintLayout 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d" 
+ xmlns:app="http://schemas.android.com/apk/resauto" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ android:layout_width="match_parent" 
+ android:layout_height="match_parent" 
+ 
+app:layout_behavior="@string/appbar_scrolling_view_behav
+ior" 
+ 
+tools:context="example.javatpoint.com.optionmenu.MainAct
+ivity" 
+ tools:showIn="@layout/activity_main"> 
+ 
+ <TextView 
+ android:layout_width="wrap_content" 
+ android:layout_height="wrap_content" 
+ android:text="Hello World!" 
+app:layout_constraintBottom_toBottomOf="parent" 
+ app:layout_constraintLeft_toLeftOf="parent" 
+app:layout_constraintRight_toRightOf="parent" 
+ app:layout_constraintTop_toTopOf="parent" /> 
+ 
+</android.support.constraint.ConstraintLayout> 
+menu_main.xml
+<menu 
+xmlns:android="http://schemas.android.com/apk/res/androi
+d" 
+ xmlns:app="http://schemas.android.com/apk/resauto" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ 
+tools:context="example.javatpoint.com.optionmenu.MainAct
+ivity"> 
+ 
+ <item android:id="@+id/item1" 
+ android:title="Item 1"/> 
+ <item android:id="@+id/item2" 
+ android:title="Item 2"/> 
+ <item android:id="@+id/item3" 
+ android:title="Item 3" 
+ app:showAsAction="withText"/> 
+</menu> 
+MainActivity.java
+package example.javatpoint.com.optionmenu; 
+ 
+import android.os.Bundle; 
+import android.support.v7.app.AppCompatActivity; 
+import android.support.v7.widget.Toolbar; 
+import android.view.Menu; 
+import android.view.MenuItem; 
+import android.widget.Toast; 
+ 
+public class MainActivity extends AppCompatActivity 
+{ 
+ 
+ @Override 
+ protected void onCreate(Bundle 
+savedInstanceState) { 
+ super.onCreate(savedInstanceState); 
+ setContentView(R.layout.activity_main); 
+ Toolbar toolbar = (Toolbar) 
+findViewById(R.id.toolbar); 
+ setSupportActionBar(toolbar); 
+ } 
+ 
+ @Override 
+ public boolean onCreateOptionsMenu(Menu menu) { 
+ // Inflate the menu; this adds items to the 
+action bar if it is present. 
+ getMenuInflater().inflate(R.menu.menu_main, 
+menu); 
+ return true; 
+ } 
+ 
+ @Override 
+ public boolean onOptionsItemSelected(MenuItem 
+item) { 
+ int id = item.getItemId(); 
+ switch (id){ 
+ case R.id.item1: 
+Toast.makeText(getApplicationContext(),"Item 1 
+Selected",Toast.LENGTH_LONG).show(); 
+ return true; 
+ case R.id.item2: 
+Toast.makeText(getApplicationContext(),"Item 2 
+Selected",Toast.LENGTH_LONG).show(); 
+ return true; 
+ case R.id.item3: 
+Toast.makeText(getApplicationContext(),"Item 3 
+Selected",Toast.LENGTH_LONG).show(); 
+ return true; default: 
+ return 
+super.onOptionsItemSelected(item); 
+ } 
+ } 
+} 
+Output :
+ASSIGNMENT – 14
+• Android Program to Demonstrate Toast in an 
+Application
+MainActivity.java
+package codedost.toast;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+public class MainActivity extends AppCompatActivity 
+{
+ Button b1;
+ @Override
+ protected void onCreate(Bundle 
+savedInstanceState) {
+ super.onCreate(savedInstanceState);
+ setContentView(R.layout.activity_main);
+ b1 = (Button) 
+findViewById(R.id.toast_button);
+ b1.setOnClickListener(new 
+View.OnClickListener() {
+ @Override
+ public void onClick(View v) {
+ 
+Toast.makeText(MainActivity.this,"You just Toasted 
+me!!!",Toast.LENGTH_LONG).show();
+ /*Another way to display a Toast 
+message
+ Toast 
+t=Toast.makeText(MainActivity.this,"You just Toasted 
+me!!!",Toast.LENGTH_LONG);
+ t.show();
+ */
+ }
+ });
+ }
+}
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid"
+ xmlns:tools="http://schemas.android.com/tools"
+ android:id="@+id/activity_main"
+ android:layout_width="match_parent"
+ android:layout_height="match_parent"
+ 
+android:paddingBottom="@dimen/activity_vertical_marg
+in"
+ 
+android:paddingLeft="@dimen/activity_horizontal_marg
+in"
+ 
+android:paddingRight="@dimen/activity_horizontal_mar
+gin"
+ 
+android:paddingTop="@dimen/activity_vertical_margin"
+ tools:context="codedost.toast.MainActivity">
+ <Button
+ android:id="@+id/toast_button"
+ android:layout_width="wrap_content"
+ android:layout_height="wrap_content"
+ android:text="Toast me!"
+ android:layout_centerVertical="true"
+ android:layout_centerHorizontal="true"
+ />
+</RelativeLayout>
+Output : 
+ASSIGNMENT – 15
+• Android Program to Demonstrate List view Activity
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?> 
+<android.support.constraint.ConstraintLayout 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" 
+ xmlns:app="http://schemas.android.com/apk/resauto" 
+ xmlns:tools="http://schemas.android.com/tools" 
+ android:layout_width="match_parent" 
+ android:layout_height="match_parent" 
+ 
+tools:context="listview.example.com.listview.MainAct
+ivity"> 
+ 
+ <ListView 
+ android:id="@+id/listView" 
+ android:layout_width="match_parent" 
+ android:layout_height="fill_parent" 
+ /> 
+</android.support.constraint.ConstraintLayout>
+mylist.xml
+<?xml version="1.0" encoding="utf-8"?> 
+ 
+<TextView 
+xmlns:android="http://schemas.android.com/apk/res/an
+droid" 
+ android:id="@+id/textView" 
+ android:layout_width="wrap_content" 
+ android:layout_height="wrap_content" 
+ android:text="Medium Text" 
+ android:textStyle="bold" 
+ 
+android:textAppearance="?android:attr/textAppearance
+Medium" 
+ android:layout_marginLeft="10dp" 
+ android:layout_marginTop="5dp" 
+ android:padding="2dp" 
+ android:textColor="#4d4d4d" 
+ /> 
+strings.xml
+<resources> 
+ <string name="app_name">ListView</string> 
+ <string-array name="array_technology"> 
+ <item>Android</item> 
+ <item>Java</item> 
+ <item>Php</item> 
+ <item>Hadoop</item> 
+ <item>Sap</item> 
+ <item>Python</item> 
+ <item>Ajax</item> 
+ <item>C++</item> 
+ <item>Ruby</item> 
+ <item>Rails</item> 
+ <item>.Net</item> 
+ <item>Perl</item> 
+ </string-array> 
+</resources> 
+MainActivity.java
+package listview.example.com.listview; 
+import android.support.v7.app.AppCompatActivity; 
+import android.os.Bundle; 
+import android.view.View; 
+import android.widget.AdapterView; 
+import android.widget.ArrayAdapter; 
+import android.widget.ListView; 
+import android.widget.TextView; 
+import android.widget.Toast; 
+public class MainActivity extends AppCompatActivity 
+{ 
+ ListView listView; 
+ TextView textView; 
+ String[] listItem; 
+ @Override 
+ protected void onCreate(Bundle 
+savedInstanceState) { 
+ super.onCreate(savedInstanceState); 
+ setContentView(R.layout.activity_main); 
+ listView=(ListView)findViewById(R.id.listView); 
+ textView=(TextView)findViewById(R.id.textView); 
+ listItem = 
+getResources().getStringArray(R.array.array_technolo
+gy); 
+ final ArrayAdapter<String> adapter = new 
+ArrayAdapter<String>(this, 
+ android.R.layout.simple_list_item_1, 
+android.R.id.text1, listItem); 
+ listView.setAdapter(adapter); 
+listView.setOnItemClickListener(new 
+AdapterView.OnItemClickListener() { 
+ @Override 
+ public void onItemClick(AdapterView<?> 
+adapterView, View view, int position, long l) { 
+ // TODO Auto-generated method stub 
+ String 
+value=adapter.getItem(position); 
+Toast.makeText(getApplicationContext(),value,Toast.L
+ENGTH_SHORT).show(); 
+ } 
+ }); 
+ } 
+} 
+Output : 
